@@ -59,6 +59,25 @@ export default {
             return next();
         };
 
+        // Health check endpoint (no authentication required)
+        app.get('/health', async (c) => {
+            try {
+                // Optionally verify database connectivity
+                await env.DB.prepare('SELECT 1').first();
+                
+                return c.json({
+                    status: 'healthy',
+                    timestamp: new Date().toISOString()
+                }, 200);
+            } catch (error: any) {
+                return c.json({
+                    status: 'unhealthy',
+                    error: error.message,
+                    timestamp: new Date().toISOString()
+                }, 503);
+            }
+        });
+
         // CRUD REST endpoints made available to all of our tables
         app.all('/rest/*', authMiddleware, handleRest);
 
